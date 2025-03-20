@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrap Mechanic Image Maker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2ecc71;
+            --accent: #f39c12;
+            --danger: #e74c3c;
+            --dark: #34495e;
+            --light: #ecf0f1;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: 20px;
+            padding-bottom: 40px;
+        }
+        
+        .app-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .app-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            position: relative;
+        }
+        
+        .app-title {
+            margin: 0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .app-body {
+            padding: 25px;
+            background: white;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .section-header {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .canvas-container {
+            border: 2px dashed #dee2e6;
+            border-radius: 8px;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            background-color: var(--light);
+            min-height: 200px;
+            position: relative;
+        }
+        
+        canvas {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 4px;
+        }
+        
+        .stats-card {
+            border-radius: 8px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+        }
+        
+        .blueprint-btn {
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .blueprint-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .blueprint-btn:disabled {
+            cursor: not-allowed;
+        }
+        
+        #outputText {
+            font-family: monospace;
+            font-size: 13px;
+            border-radius: 6px;
+            resize: vertical;
+        }
+        
+        .help-modal {
+            max-width: 800px;
+        }
+        
+        .file-upload-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .custom-file-upload {
+            display: inline-block;
+            padding: 12px 20px;
+            cursor: pointer;
+            background-color: var(--primary);
+            color: white;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            text-align: center;
+            width: 100%;
+            font-weight: 500;
+        }
+        
+        .custom-file-upload:hover {
+            background-color: #2980b9;
+        }
+        
+        #myFile {
+            display: none;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            border-radius: 8px;
+        }
+        
+        .bounce-right {
+            animation: bounceRight 1s infinite;
+            color: var(--accent);
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        @keyframes bounceRight {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(10px); }
+        }
+        
+        .spinning {
+            animation: spin 1s infinite linear;
+            display: inline-block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .ratio-control {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 150px;
+        }
+        
+        .empty-canvas-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #adb5bd;
+            text-align: center;
+        }
+        
+        .color-preview {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            vertical-align: middle;
+        }
+        
+        /* Success message animation */
+        .success-message {
+            animation: fadeIn 0.5s, fadeOut 0.5s 3s forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        
+        /* Tooltip styling */
+        .tooltip-inner {
+            max-width: 300px;
+            padding: 10px;
+            background-color: var(--dark);
+            font-size: 14px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="app-container">
+            <!-- Header -->
+            <div class="app-header">
+                <div class="app-title">
+                    <h2><i class="fas fa-cubes me-2"></i> Scrap Mechanic Image Maker</h2>
+                    <div>
+                        <button id="helpBtn" class="btn btn-light btn-sm rounded-circle" data-bs-toggle="modal" data-bs-target="#helpModal" title="Help Guide">
+                            <i class="fas fa-question"></i>
+                        </button>
+                        <div id="hint" class="bounce-right ms-2 d-none">→</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main content area -->
+            <div class="app-body">
+                <!-- Image Upload Section -->
+                <div class="section">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-upload text-primary"></i>
+                            <h5>Upload Image</h5>
+                        </div>
+                    </div>
+                    
+                    <div class="file-upload-container">
+                        <label for="myFile" class="custom-file-upload">
+                            <i class="fas fa-image me-2"></i> Choose an image file
+                        </label>
+                        <input type="file" id="myFile" accept="image/*">
+                        <div id="loadingImage" class="loading-overlay d-none">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <span class="ms-2">Loading image... please wait</span>
+                        </div>
+                    </div>
+                    
+                    <div id="imgLoadedMsg" class="alert alert-success d-flex align-items-center d-none mb-0 success-message">
+                        <i class="fas fa-check-circle me-2"></i> Image loaded successfully!
+                    </div>
+                </div>
+                
+                <!-- Image Preview & Stats -->
+                <div class="section">
+                    <div class="row">
+                        <!-- Image Preview -->
+                        <div class="col-md-7">
+                            <div class="section-header">
+                                <div class="section-title">
+                                    <i class="fas fa-image text-primary"></i>
+                                    <h5>Image Preview</h5>
+                                </div>
+                                <button id="toggleInfoBtn" class="btn btn-outline-primary btn-sm" disabled>
+                                    <i class="fas fa-info-circle"></i> Toggle Stats
+                                </button>
+                            </div>
+                            
+                            <div class="canvas-container">
+                                <canvas></canvas>
+                                <div id="emptyCanvasMessage" class="empty-canvas-message">
+                                    <i class="fas fa-image fa-3x mb-2"></i>
+                                    <p>No image loaded yet</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Image Stats -->
+                        <div class="col-md-5">
+                            <div id="imgStats" class="stats-card p-3">
+                                <h5 class="mb-3 text-primary"><i class="fas fa-chart-bar me-2"></i> Image Stats</h5>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">Pixel to Block Ratio:</label>
+                                    <div class="input-group ratio-control">
+                                        <span class="input-group-text">1:</span>
+                                        <input type="number" min="1" class="form-control" id="imRat" value="6">
+                                    </div>
+                                    <small class="text-muted">Lower value = larger creation</small>
+                                </div>
+                                
+                                <table class="table table-sm table-hover">
+                                    <tbody>
+                                        <tr>
+                                            <td><i class="fas fa-arrows-alt-h text-secondary"></i> Width:</td>
+                                            <td id="imWdValue" class="text-end">0px</td>
+                                        </tr>
+                                        <tr>
+                                            <td><i class="fas fa-arrows-alt-v text-secondary"></i> Height:</td>
+                                            <td id="imHtValue" class="text-end">0px</td>
+                                        </tr>
+                                        <tr class="table-info">
+                                            <td><i class="fas fa-cube text-primary"></i> Final Width:</td>
+                                            <td id="finalWidth" class="text-end fw-bold">0 blocks</td>
+                                        </tr>
+                                        <tr class="table-info">
+                                            <td><i class="fas fa-cube text-primary"></i> Final Height:</td>
+                                            <td id="finalHeight" class="text-end fw-bold">0 blocks</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Generate Blueprint Button -->
+                <div class="section text-center">
+                    <button id="getBlueprintBtn" class="btn btn-primary btn-lg blueprint-btn" disabled>
+                        <i class="fas fa-palette me-2"></i> Generate Blueprint
+                    </button>
+                </div>
+                
+                <!-- Output Section -->
+                <div class="section d-none" id="outputSection">
+                    <div class="section-header">
+                        <div class="section-title">
+                            <i class="fas fa-code text-primary"></i>
+                            <h5>Blueprint Code</h5>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-success d-flex align-items-center">
+                        <i class="fas fa-check-circle me-2"></i> Blueprint generated successfully! Copy the text below:
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <textarea id="outputText" class="form-control" style="min-height: 150px;" readonly></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button id="copyBtn" class="btn btn-primary">
+                            <i class="fas fa-copy me-2"></i> Copy to Clipboard
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center mt-3 text-muted">
+            <small>Created by <strong>TapticDev</strong> | Original Idea by <strong>Newms34</strong></small>
+        </div>
+    </div>
+    
+    <!-- Help Modal -->
+    <div class="modal fade" id="helpModal" tabindex="-1" aria-labelledby="helpModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable help-modal">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="helpModalLabel"><i class="fas fa-question-circle me-2"></i> How to Use</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-4">
+                        <h5 class="text-primary">What is Scrap Mechanic Image Maker?</h5>
+                        <p class="text-muted">This tool converts your images into Scrap Mechanic blueprints using JavaScript. Follow the instructions below to create and load your blueprint!</p>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-palette me-2"></i> Generating the Blueprint</h5>
+                        </div>
+                        <div class="card-body">
+                            <ol class="mb-0">
+                                <li class="mb-2">Find an image. It can be of anything, but remember that small-medium sized images work best (as they'll be less pixelated).</li>
+                                <li class="mb-2">Click the <span class="badge bg-primary">Choose an image file</span> button.</li>
+                                <li class="mb-2">Adjust the image ratio (number of pixels per block) using the ratio control.</li>
+                                <li class="mb-2">Click <span class="badge bg-primary">Generate Blueprint</span>.</li>
+                                <li class="mb-2"><strong>Be patient!</strong> For any image of any appreciable size, this process can take a while!</li>
+                            </ol>
+                            <div class="alert alert-warning mt-3 mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i> <strong>Important note:</strong> Due to the way the math works, certain picture ratios will produce a skewed image. If this happens, try increasing or decreasing the ratio by 1.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0"><i class="fas fa-download me-2"></i> Loading the Blueprint in Scrap Mechanic</h5>
+                        </div>
+                        <div class="card-body">
+                            <ol start="6" class="mb-0">
+                                <li class="mb-2">Make (or download) a creation that you're okay deleting. Anything works, as long as it's saved on your machine. You can leave Scrap Mechanic open while you do the rest of this.</li>
+                                <li class="mb-2">Open a folder (or Windows Explorer), and in the address bar, type <code class="bg-light px-1">%appData%</code>.</li>
+                                <li class="mb-2">Look for an <code class="bg-light px-1">Axolot Games</code> folder. Go in there, then <code class="bg-light px-1">Scrap Mechanic</code>, <code class="bg-light px-1">User</code>, and finally <code class="bg-light px-1">User_xxxxxxx</code> (where xxxxxxx is some random-looking number). This is where your info's stored (so, ya know, <span class="text-danger">be careful!</span>).</li>
+                                <li class="mb-2">Go into the <code class="bg-light px-1">Blueprints</code> folder. Here are all the creations you've saved/downloaded. Right-click and click "Sort by → Date Modified", then pick the first folder.</li>
+                                <li class="mb-2">You should see three files: the <code class="bg-light px-1">icon.png</code>, the <code class="bg-light px-1">description.json</code>, and the <code class="bg-light px-1">blueprint.json</code>. The last one's the one we want.</li>
+                                <li class="mb-2">Open <code class="bg-light px-1">blueprint.json</code> in your favorite plain text editor (that means <em>not</em> MS Word, WordPad, Google Docs, Open Office, or any other word processor with formatted text!).</li>
+                                <li class="mb-2">Copy the contents of the Output box.</li>
+                                <li class="mb-2">Replace the contents of <code class="bg-light px-1">blueprint.json</code>, and save it.</li>
+                                <li>Load your image in Scrap Mechanic!</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Global variables
+            let imgData = null;
+            let canv = document.querySelector('canvas');
+            let ctx = canv.getContext('2d');
+            let canvImg = new Image();
+            let imHt = 0;
+            let imWd = 0;
+            let imgLoaded = false;
+            let scrapbloo = 'None yet!';
+            let imRat = 6;
+            let statsShow = true;
+            
+            // DOM elements
+            const fileInput = document.getElementById('myFile');
+            const ratioInput = document.getElementById('imRat');
+            const blueprintBtn = document.getElementById('getBlueprintBtn');
+            const outputTextarea = document.getElementById('outputText');
+            const copyBtn = document.getElementById('copyBtn');
+            const helpBtn = document.getElementById('helpBtn');
+            const toggleInfoBtn = document.getElementById('toggleInfoBtn');
+            const imgStats = document.getElementById('imgStats');
+            const helpModal = document.getElementById('helpModal');
+            const imgLoadedMsg = document.getElementById('imgLoadedMsg');
+            const outputSection = document.getElementById('outputSection');
+            const emptyCanvasMessage = document.getElementById('emptyCanvasMessage');
+            const loadingImage = document.getElementById('loadingImage');
+            
+            // Initialize hint system
+            let notYetHinted = !localStorage.getItem('scrapImageHasHinted');
+            const hintElem = document.getElementById('hint');
+            if (notYetHinted && hintElem) {
+                hintElem.classList.remove('d-none');
+            }
+            
+            // Initialize tooltips
+            const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+            tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl);
+            });
+            
+            // Event listeners
+            if (fileInput) fileInput.addEventListener('change', loadImg);
+            if (ratioInput) ratioInput.addEventListener('input', updateStats);
+            if (blueprintBtn) blueprintBtn.addEventListener('click', doBloop);
+            if (copyBtn) copyBtn.addEventListener('click', copyToClipboard);
+            if (toggleInfoBtn) toggleInfoBtn.addEventListener('click', toggleInfo);
+            if (hintElem) hintElem.addEventListener('click', gotHint);
+            if (helpModal) helpModal.addEventListener('shown.bs.modal', gotHint);
+            
+            // Canvas setup
+            canvImg.addEventListener("load", function() {
+                ctx.drawImage(canvImg, 0, 0);
+                if (emptyCanvasMessage) {
+                    emptyCanvasMessage.classList.add('d-none');
+                }
+            });
+            
+            // Functions
+            function gotHint() {
+                if (hintElem) {
+                    hintElem.classList.add('d-none');
+                }
+                localStorage.setItem('scrapImageHasHinted', true);
+            }
+            
+            function toggleInfo() {
+                statsShow = !statsShow;
+                if (imgStats) {
+                    imgStats.style.display = statsShow ? 'block' : 'none';
+                }
+            }
+            
+            function trunc(n) {
+                return parseInt(n);
+            }
+            
+            function updateStats() {
+                imRat = parseInt(ratioInput.value) || 6;
+                updateDisplayedStats();
+            }
+            
+            function updateDisplayedStats() {
+                // Update all stats display elements
+                document.getElementById('imWdValue').textContent = imWd + 'px';
+                document.getElementById('imHtValue').textContent = imHt + 'px';
+                document.getElementById('finalWidth').textContent = trunc(imWd / imRat) + ' blocks';
+                document.getElementById('finalHeight').textContent = trunc(imHt / imRat) + ' blocks';
+            }
+            
+            function loadImg() {
+                const file = fileInput.files[0];
+                if (!file) return;
+                
+                // Show loading indicator
+                if (loadingImage) loadingImage.classList.remove('d-none');
+                
+                const reader = new FileReader();
+                reader.addEventListener("load", function() {
+                    const pik = new Image();
+                    pik.crossOrigin = 'Anonymous';
+                    pik.onload = function() {
+                        imgLoaded = true;
+                        imHt = pik.height;
+                        imWd = pik.width;
+                        canv.width = imWd;
+                        canv.height = imHt;
+                        ctx.fillStyle = '#ffffff';
+                        
+                        localStorage.setItem("savedImageData", reader.result);
+                        canvImg.src = localStorage.getItem("savedImageData");
+                        
+                        // Update UI
+                        if (imgLoadedMsg) {
+                            imgLoadedMsg.classList.remove('d-none');
+                            setTimeout(() => {
+                                imgLoadedMsg.classList.add('d-none');
+                            }, 3500);
+                        }
+                        if (blueprintBtn) blueprintBtn.disabled = false;
+                        if (toggleInfoBtn) toggleInfoBtn.disabled = false;
+                        if (loadingImage) loadingImage.classList.add('d-none');
+                        
+                        updateDisplayedStats();
+                    };
+                    pik.src = reader.result;
+                }, false);
+                
+                reader.readAsDataURL(file);
+            }
+            
+            function doBloop() {
+                const totalSize = (imHt / imRat) * (imWd / imRat);
+                let conf = true;
+                
+                if (totalSize > 60000) {
+                    conf = confirm('Warning! Your image is particularly large. Consider using a smaller image OR reducing the ratio! Are you sure you want to continue?');
+                }
+                
+                if (conf) {
+                    const originalButtonText = blueprintBtn.innerHTML;
+                    blueprintBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Generating...';
+                    blueprintBtn.disabled = true;
+                    
+                    // Use setTimeout to allow UI to update before heavy processing
+                    setTimeout(function() {
+                        drawImg();
+                        blueprintBtn.innerHTML = originalButtonText;
+                        blueprintBtn.disabled = false;
+                        if (outputSection) outputSection.classList.remove('d-none');
+                    }, 100);
+                }
+            }
+            
+            function drawImg() {
+                // Get image data
+                imgData = ctx.getImageData(0, 0, imWd, imHt).data;
+                
+                const rat = imRat;
+                const dims = { height: imHt, width: imWd };
+                const xDim = Math.floor(dims.width / rat);
+                const yDim = Math.floor(dims.height / rat);
+                
+                const chunkWidth = Math.floor(dims.height / yDim);
+                const chunkHeight = Math.floor(dims.width / xDim);
+                let rgbArr = [];
+                let currPx = 0;
+                
+                // Convert image data to RGB array
+                for (let y = 0; y < dims.height; y++) {
+                    let row = [];
+                    for (let x = 0; x < dims.width; x++) {
+                        let newRGB = { 
+                            red: imgData[currPx], 
+                            green: imgData[currPx + 1], 
+                            blue: imgData[currPx + 2] 
+                        };
+                        currPx += 4;
+                        row.push(newRGB);
+                    }
+                    rgbArr.push(row);
+                }
+                
+                // Average chunks of pixels
+                let chunkArr = [];
+                for (let i = 0; i < dims.height; i += chunkHeight) {
+                    let row = [];
+                    for (let j = 0; j < dims.width; j += chunkWidth) {
+                        let tot = chunkWidth * chunkHeight;
+                        let avg = { r: 0, g: 0, b: 0 };
+                        
+                        for (let x = 0; x < chunkWidth; x++) {
+                            for (let y = 0; y < chunkHeight; y++) {
+                                let theX = j + x;
+                                let theY = i + y;
+                                
+                                if (rgbArr[theY] && rgbArr[theY][theX]) {
+                                    avg.r += rgbArr[theY][theX].red;
+                                    avg.g += rgbArr[theY][theX].green;
+                                    avg.b += rgbArr[theY][theX].blue;
+                                } else {
+                                    tot--;
+                                }
+                            }
+                        }
+                        
+                        avg.r = avg.r / tot;
+                        avg.g = avg.g / tot;
+                        avg.b = avg.b / tot;
+                        row.push(avg);
+                    }
+                    chunkArr.push(row);
+                }
+                
+                // Create Scrap Mechanic JSON
+                let str = '{"bodies": [{"childs": [';
+                let allChunks = [];
+                
+                for (let y = 0; y < chunkArr.length; y++) {
+                    for (let x = 0; x < chunkArr[y].length; x++) {
+                        let chunkColor = chunkArr[y][x];
+                        let pxl = {
+                            "bounds": { "x": 1, "y": 1, "z": 1 },
+                            "color": rgbToHex(chunkColor),
+                            "pos": { "x": x, "y": 1, "z": chunkArr.length - y - 1 },
+                            "shapeId": "a6c6ce30-dd47-4587-b475-085d55c6a3b4",
+                            "xaxis": 1,
+                            "zaxis": 3
+                        };
+                        allChunks.push(JSON.stringify(pxl));
+                    }
+                }
+                
+                str += allChunks.join(',') + ']}],"version": 1}';
+                scrapbloo = str;
+                
+                // Update output
+                outputTextarea.value = scrapbloo;
+                outputSection.classList.remove('d-none');
+                
+                // Scroll to output section
+                outputSection.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            function rgbToHex(rgb) {
+                let r = parseInt(rgb.r).toString(16);
+                let g = parseInt(rgb.g).toString(16);
+                let b = parseInt(rgb.b).toString(16);
+                
+                if (r.length < 2) r = '0' + r;
+                if (g.length < 2) g = '0' + g;
+                if (b.length < 2) b = '0' + b;
+                
+                return r + g + b;
+            }
+            
+            function copyToClipboard() {
+                outputTextarea.select();
+                document.execCommand('copy');
+                
+                // Show feedback
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check me-2"></i> Copied!';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                }, 2000);
+            }
+        });
+    </script>
+</body>
+</html>
